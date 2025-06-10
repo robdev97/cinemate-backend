@@ -1,7 +1,6 @@
-package com.cinemate.backend.domain.dto;
+package com.cinemate.backend.domain;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -11,8 +10,8 @@ import java.time.LocalDateTime;
 @Builder
 public class WatchSessionDto {
     private Long id;
+    private Long movieId;
     private String movieTitle;
-    private String hostUsername;
     private LocalDateTime scheduledDateTime;
-    private String status;
+    private String location;
 }

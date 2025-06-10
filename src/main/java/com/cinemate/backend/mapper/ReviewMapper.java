@@ -1,31 +1,30 @@
 package com.cinemate.backend.mapper;
 
-import com.cinemate.backend.domain.Movie;
 import com.cinemate.backend.domain.Review;
-import com.cinemate.backend.domain.User;
-import com.cinemate.backend.domain.dto.ReviewDto;
+import com.cinemate.backend.domain.ReviewDto;
 
 public class ReviewMapper {
 
-    public static ReviewDto mapToDto(Review review) {
+    public static ReviewDto toDto(Review review) {
         return ReviewDto.builder()
                 .id(review.getId())
-                .movieId(review.getMovie().getId())
-                .userId(review.getUser().getId())
-                .content(review.getContent())
+                .userId(review.getUserId())
+                .movieId(review.getMovieId())
                 .rating(review.getRating())
+                .content(review.getContent())
                 .createdAt(review.getCreatedAt())
                 .build();
     }
 
-    public static Review mapToEntity(ReviewDto dto) {
+    public static Review fromDto(ReviewDto dto) {
         return Review.builder()
                 .id(dto.getId())
-                .movie(Movie.builder().id(dto.getMovieId()).build())
-                .user(User.builder().id(dto.getUserId()).build())
-                .content(dto.getContent())
+                .userId(dto.getUserId())
+                .movieId(dto.getMovieId())
                 .rating(dto.getRating())
+                .content(dto.getContent())
                 .createdAt(dto.getCreatedAt())
                 .build();
     }
 }
+

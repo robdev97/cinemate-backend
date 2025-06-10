@@ -1,31 +1,25 @@
 package com.cinemate.backend.mapper;
 
 import com.cinemate.backend.domain.Movie;
-import com.cinemate.backend.domain.dto.MovieDto;
-import org.springframework.stereotype.Component;
+import com.cinemate.backend.domain.MovieDto;
 
-@Component
 public class MovieMapper {
 
-    public MovieDto toDto(Movie movie) {
+    public static MovieDto toDto(Movie movie) {
         return MovieDto.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
-                .genre(movie.getGenre())
-                .releaseYear(movie.getReleaseYear())
-                .rating(movie.getRating())
-                .description(movie.getDescription())
+                .director(movie.getDirector())
+                .year(movie.getYear())
                 .build();
     }
 
-    public Movie toEntity(MovieDto dto) {
+    public static Movie fromDto(MovieDto dto) {
         return Movie.builder()
                 .id(dto.getId())
                 .title(dto.getTitle())
-                .genre(dto.getGenre())
-                .releaseYear(dto.getReleaseYear())
-                .rating(dto.getRating())
-                .description(dto.getDescription())
+                .director(dto.getDirector())
+                .year(dto.getYear())
                 .build();
     }
 }

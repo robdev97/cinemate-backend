@@ -1,13 +1,13 @@
 package com.cinemate.backend.controller;
 
-import com.cinemate.backend.domain.WatchSession;
-import com.cinemate.backend.domain.dto.WatchSessionDto;
+import com.cinemate.backend.domain.WatchSessionDto;
 import com.cinemate.backend.mapper.WatchSessionMapper;
 import com.cinemate.backend.service.WatchSessionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,30 +20,52 @@ public class WatchSessionController {
     private final WatchSessionMapper watchSessionMapper;
 
     @GetMapping
-    public ResponseEntity<List<WatchSessionDto>> getAllWatchSessions() {
-        List<WatchSession> sessions = watchSessionService.getAllWatchSessions();
-        List<WatchSessionDto> sessionDtos = sessions.stream()
+    public List<WatchSessionDto> getAllSessions() {
+        return watchSessionService.getAllSessions().stream()
                 .map(watchSessionMapper::toDto)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(sessionDtos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<WatchSessionDto> getWatchSessionById(@PathVariable Long id) {
-        WatchSession session = watchSessionService.getWatchSessionById(id);
-        return ResponseEntity.ok(watchSessionMapper.toDto(session));
+    public ResponseEntity<WatchSessionDto> getSessionById(@PathVariable Long id) {
+        return watchSessionService.getSessionById(id)
+                .map(watchSessionMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<WatchSessionDto> createWatchSession(@RequestBody WatchSessionDto watchSessionDto) {
-        WatchSession session = watchSessionMapper.toEntity(watchSessionDto);
-        WatchSession savedSession = watchSessionService.saveWatchSession(session);
-        return ResponseEntity.ok(watchSessionMapper.toDto(savedSession));
+    public WatchSessionDto createSession(@RequestBody WatchSessionDto dto) {
+        return watchSessionMapper.toDto(
+                watchSessionService.saveSession(
+                        watchSessionMapper.fromDto(dto)
+                )
+        );
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<WatchSessionDto> updateSession(@PathVariable Long id, @RequestBody WatchSessionDto dto) {
+        try {
+            return ResponseEntity.ok(
+                    watchSessionMapper.toDto(
+                            watchSessionService.updateSession(id, watchSessionMapper.fromDto(dto))
+                    )
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWatchSession(@PathVariable Long id) {
-        watchSessionService.deleteWatchSession(id);
+    public ResponseEntity<Void> deleteSession(@PathVariable Long id) {
+        watchSessionService.deleteSession(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/upcoming")
+    public List<WatchSessionDto> getUpcomingSessions() {
+        return watchSessionService.getUpcomingSessions(LocalDateTime.now()).stream()
+                .map(watchSessionMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

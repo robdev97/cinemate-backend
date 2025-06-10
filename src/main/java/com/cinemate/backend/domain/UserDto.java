@@ -1,4 +1,4 @@
-package com.cinemate.backend.domain.dto;
+package com.cinemate.backend.domain;
 
 import lombok.*;
 
@@ -10,7 +10,5 @@ import lombok.*;
 public class UserDto {
     private Long id;
     private String username;
-    private String password;
     private String email;
-    private String fullName;
 }

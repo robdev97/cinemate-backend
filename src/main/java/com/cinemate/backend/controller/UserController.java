@@ -1,14 +1,14 @@
 package com.cinemate.backend.controller;
 
-import com.cinemate.backend.domain.User;
-import com.cinemate.backend.domain.dto.UserDto;
+import com.cinemate.backend.domain.UserDto;
 import com.cinemate.backend.mapper.UserMapper;
 import com.cinemate.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -16,36 +16,45 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserMapper userMapper;
 
     @GetMapping
     public List<UserDto> getAllUsers() {
         return userService.getAllUsers().stream()
-                .map(userMapper::mapToDto)
-                .toList();
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public UserDto getUserById(@PathVariable Long id) {
-        return userMapper.mapToDto(userService.getUserById(id));
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        return userService.getUserById(id)
+                .map(UserMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     public UserDto createUser(@RequestBody UserDto userDto) {
-        var savedUser = userService.saveUser(userMapper.mapToEntity(userDto));
-        return userMapper.mapToDto(savedUser);
+        return UserMapper.toDto(
+                userService.saveUser(UserMapper.fromDto(userDto))
+        );
     }
 
     @PutMapping("/{id}")
-    public UserDto updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
-        var updated = userService.updateUser(id, userMapper.mapToEntity(userDto));
-        return userMapper.mapToDto(updated);
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
+        try {
+            return ResponseEntity.ok(
+                    UserMapper.toDto(
+                            userService.updateUser(id, UserMapper.fromDto(userDto))
+                    )
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

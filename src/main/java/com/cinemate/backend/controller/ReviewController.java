@@ -1,15 +1,14 @@
 package com.cinemate.backend.controller;
 
-import com.cinemate.backend.domain.Review;
-import com.cinemate.backend.domain.dto.ReviewDto;
+import com.cinemate.backend.domain.ReviewDto;
 import com.cinemate.backend.mapper.ReviewMapper;
 import com.cinemate.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reviews")
@@ -18,38 +17,51 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    @GetMapping
+    public List<ReviewDto> getAllReviews() {
+        return reviewService.getAllReviews().stream()
+                .map(ReviewMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
     @GetMapping("/movie/{movieId}")
-    public ResponseEntity<List<ReviewDto>> getReviewsByMovie(@PathVariable Long movieId) {
-        List<Review> reviews = reviewService.getReviewsForMovie(movieId);
-        List<ReviewDto> dtos = reviews.stream()
-                .map(ReviewMapper::mapToDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
+    public List<ReviewDto> getReviewsByMovie(@PathVariable Long movieId) {
+        return reviewService.getReviewsByMovieId(movieId).stream()
+                .map(ReviewMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping("/user/{username}")
-    public ResponseEntity<List<ReviewDto>> getReviewsByUser(@PathVariable String username) {
-        List<Review> reviews = reviewService.getReviewsByUser(username);
-        List<ReviewDto> dtos = reviews.stream()
-                .map(ReviewMapper::mapToDto)
-                .toList();
-        return ResponseEntity.ok(dtos);
+    @GetMapping("/{id}")
+    public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id) {
+        return reviewService.getReviewById(id)
+                .map(ReviewMapper::toDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/{movieId}/add")
-    public ResponseEntity<ReviewDto> addReview(
-            @PathVariable Long movieId,
-            @RequestParam String username,
-            @RequestParam String content,
-            @RequestParam int rating) {
-        Review review = reviewService.addReview(movieId, username, content, rating);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ReviewMapper.mapToDto(review));
+    @PostMapping
+    public ReviewDto createReview(@RequestBody ReviewDto reviewDto) {
+        return ReviewMapper.toDto(
+                reviewService.saveReview(ReviewMapper.fromDto(reviewDto))
+        );
     }
 
-    @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
-        reviewService.deleteReview(reviewId);
+    @PutMapping("/{id}")
+    public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @RequestBody ReviewDto reviewDto) {
+        try {
+            return ResponseEntity.ok(
+                    ReviewMapper.toDto(
+                            reviewService.updateReview(id, ReviewMapper.fromDto(reviewDto))
+                    )
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
+        reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
 }

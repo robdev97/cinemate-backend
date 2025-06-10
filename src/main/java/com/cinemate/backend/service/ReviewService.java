@@ -1,58 +1,46 @@
 package com.cinemate.backend.service;
 
-import com.cinemate.backend.domain.Movie;
 import com.cinemate.backend.domain.Review;
-import com.cinemate.backend.domain.User;
-import com.cinemate.backend.exception.ResourceNotFoundException;
-import com.cinemate.backend.repository.MovieRepository;
 import com.cinemate.backend.repository.ReviewRepository;
-import com.cinemate.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final MovieRepository movieRepository;
-    private final UserRepository userRepository;
 
-    public List<Review> getReviewsForMovie(Long movieId) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
-        return reviewRepository.findAllByMovie(movie);
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAll();
     }
 
-    public List<Review> getReviewsByUser(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
-        return reviewRepository.findAllByUser(user);
+    public List<Review> getReviewsByMovieId(Long movieId) {
+        return reviewRepository.findByMovieId(movieId);
     }
 
-    public Review addReview(Long movieId, String username, String content, int rating) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+    public Optional<Review> getReviewById(Long id) {
+        return reviewRepository.findById(id);
+    }
 
-        Review review = Review.builder()
-                .movie(movie)
-                .user(user)
-                .content(content)
-                .rating(rating)
-                .createdAt(LocalDateTime.now())
-                .build();
-
+    public Review saveReview(Review review) {
         return reviewRepository.save(review);
     }
 
-    public void deleteReview(Long reviewId) {
-        reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + reviewId));
-        reviewRepository.deleteById(reviewId);
+    public Review updateReview(Long id, Review reviewDetails) {
+        return reviewRepository.findById(id)
+                .map(review -> {
+                    review.setContent(reviewDetails.getContent());
+                    review.setRating(reviewDetails.getRating());
+                    return reviewRepository.save(review);
+                })
+                .orElseThrow(() -> new RuntimeException("Review not found with id " + id));
+    }
+
+    public void deleteReview(Long id) {
+        reviewRepository.deleteById(id);
     }
 }

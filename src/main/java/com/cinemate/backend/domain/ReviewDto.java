@@ -1,17 +1,19 @@
-package com.cinemate.backend.domain.dto;
+package com.cinemate.backend.domain;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ReviewDto {
     private Long id;
-    private Long movieId;
     private Long userId;
-    private String content;
+    private Long movieId;
     private int rating;
+    private String content;
     private LocalDateTime createdAt;
 }

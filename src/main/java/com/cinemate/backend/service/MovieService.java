@@ -1,50 +1,43 @@
 package com.cinemate.backend.service;
 
 import com.cinemate.backend.domain.Movie;
-import com.cinemate.backend.domain.dto.MovieDto;
-import com.cinemate.backend.exception.ResourceNotFoundException;
-import com.cinemate.backend.mapper.MovieMapper;
 import com.cinemate.backend.repository.MovieRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class MovieService {
 
     private final MovieRepository movieRepository;
-    private final MovieMapper movieMapper;
 
-    public MovieService(MovieRepository movieRepository, MovieMapper movieMapper) {
-        this.movieRepository = movieRepository;
-        this.movieMapper = movieMapper;
+    public List<Movie> getAllMovies() {
+        return movieRepository.findAll();
     }
 
-    public List<MovieDto> getAllMovies() {
-        return movieRepository.findAll().stream()
-                .map(movieMapper::toDto)
-                .toList();
+    public Optional<Movie> getMovieById(Long id) {
+        return movieRepository.findById(id);
     }
 
-    public MovieDto getMovieById(Long id) {
-        return movieMapper.toDto(movieRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie with id " + id + " not found")));
+    public Movie saveMovie(Movie movie) {
+        return movieRepository.save(movie);
     }
 
-    public MovieDto saveMovie(MovieDto movieDto) {
-        Movie saved = movieRepository.save(movieMapper.toEntity(movieDto));
-        return movieMapper.toDto(saved);
+    public Movie updateMovie(Long id, Movie movieDetails) {
+        return movieRepository.findById(id)
+                .map(movie -> {
+                    movie.setTitle(movieDetails.getTitle());
+                    movie.setDirector(movieDetails.getDirector());
+                    movie.setYear(movieDetails.getYear());
+                    return movieRepository.save(movie);
+                })
+                .orElseThrow(() -> new RuntimeException("Movie not found with id " + id));
     }
 
     public void deleteMovie(Long id) {
-        if (!movieRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Cannot delete. Movie with id " + id + " not found");
-        }
         movieRepository.deleteById(id);
-    }
-
-    public MovieDto getMovieByTitle(String title) {
-        return movieMapper.toDto(movieRepository.findByTitle(title)
-                .orElseThrow(() -> new ResourceNotFoundException("Movie with title " + title + " not found")));
     }
 }
